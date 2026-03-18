@@ -1,4 +1,11 @@
 {
+  "scripts": {
+    "dev": "npm run dev --prefix dr-detection",
+    "build": "npm run build --prefix dr-detection",
+    "lint": "npm run lint --prefix dr-detection",
+    "preview": "npm run preview --prefix dr-detection",
+    "install:app": "npm install --prefix dr-detection"
+  },
   "dependencies": {
     "framer-motion": "^12.38.0",
     "lucide-react": "^0.577.0"
