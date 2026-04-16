@@ -1,0 +1,431 @@
+/* ════════════════════════════════════════════
+   IMAGE UPLOAD COMPONENT
+   Professional medical image uploader with drag-drop,
+   mobile camera, validation, and compression
+════════════════════════════════════════════ */
+
+/* ── Container ────────────────────────────── */
+.image-upload-container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Hide native file inputs */
+.image-upload-input {
+  display: none;
+}
+
+/* ── Upload Box ───────────────────────────── */
+.upload-box {
+  position: relative;
+  width: 100%;
+  min-height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(59,130,246,0.35);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+/* Hover effect when empty */
+.upload-box:not(.upload-box--has-image):hover {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59,130,246,0.6);
+  transform: scale(1.005);
+}
+
+/* Dragging state */
+.upload-box--dragging {
+  background: rgba(59, 130, 246, 0.08) !important;
+  border-color: rgba(59,130,246,0.7) !important;
+  border-style: solid !important;
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Has image state - solid blue border */
+.upload-box--has-image {
+  border: 2px solid rgba(59,130,246,0.5);
+  border-style: solid;
+  cursor: default;
+  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.15);
+}
+
+.upload-box--has-image:hover {
+  transform: none;
+}
+
+/* ── Upload States ────────────────────────── */
+.upload-state {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 2rem;
+}
+
+/* Empty State */
+.upload-state--empty {
+  text-align: center;
+}
+
+.upload-icon {
+  color: #3b82f6;
+  opacity: 0.85;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 4px 12px rgba(59, 130, 246, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.upload-icon:hover {
+  filter: drop-shadow(0 8px 24px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 32px rgba(59, 130, 246, 0.4));
+}
+
+.upload-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.upload-subtitle {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  margin: 0;
+  max-width: 360px;
+}
+
+/* Action Buttons */
+.upload-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.upload-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  min-height: 44px; /* Touch-friendly */
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.25s;
+  font-family: inherit;
+}
+
+.upload-action-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(59, 130, 246, 0.35);
+}
+
+.upload-action-btn--primary:hover {
+  box-shadow: 0 8px 32px rgba(59, 130, 246, 0.55);
+  transform: translateY(-1px);
+}
+
+.upload-action-btn--secondary {
+  background: rgba(255, 255, 255, 0.07);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.upload-action-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+/* Hide camera button on desktop, show on mobile */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: inline-flex;
+  }
+}
+
+/* Supported Formats */
+.upload-formats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 0.25rem;
+}
+
+.upload-formats span {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+}
+
+/* ── Loading State ────────────────────────── */
+.upload-state--loading {
+  text-align: center;
+}
+
+.loading-spinner {
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-message {
+  font-size: 1rem;
+  color: #94a3b8;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* ── Preview State ────────────────────────── */
+.upload-state--preview {
+  position: relative;
+  padding: 0;
+  gap: 0;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 18px;
+  max-height: 500px;
+}
+
+/* Clear Button */
+.clear-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  min-height: 44px; /* Touch-friendly */
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.clear-button:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Preview Info Overlay */
+.preview-info {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  backdrop-filter: blur(12px);
+  gap: 1rem;
+}
+
+.preview-filename {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.preview-filesize {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+/* ── Error Message ────────────────────────── */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  padding: 0.875rem 1.25rem;
+  color: #fca5a5;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.error-message svg {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+/* ── Responsive Design ────────────────────── */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .upload-box {
+    min-height: 360px;
+  }
+
+  .upload-title {
+    font-size: 1.3rem;
+  }
+
+  .upload-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .preview-image {
+    max-height: 400px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .image-upload-container {
+    padding: 0;
+  }
+
+  .upload-box {
+    min-height: 360px;
+    border-radius: 16px;
+  }
+
+  .upload-state {
+    padding: 1.5rem;
+  }
+
+  .upload-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .upload-title {
+    font-size: 1.15rem;
+  }
+
+  .upload-subtitle {
+    font-size: 0.85rem;
+    max-width: 280px;
+  }
+
+  .upload-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .upload-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 1rem 1.5rem;
+  }
+
+  .preview-image {
+    max-height: 360px;
+  }
+
+  .preview-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .preview-filesize {
+    align-self: flex-end;
+  }
+
+  .clear-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .error-message {
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* ── Accessibility & Touch ─────────────────── */
+
+/* Ensure buttons are touch-friendly on all mobile devices */
+@media (hover: none) and (pointer: coarse) {
+  .upload-action-btn,
+  .clear-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Focus states for accessibility */
+.upload-action-btn:focus-visible,
+.clear-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Prevent text selection during drag */
+.upload-box * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Loading animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Dark Mode Optimizations ───────────────── */
+@media (prefers-color-scheme: dark) {
+  /* Already optimized for dark mode */
+}
+
+/* ── Print Styles ──────────────────────────── */
+@media print {
+  .upload-box {
+    display: none;
+  }
+}
