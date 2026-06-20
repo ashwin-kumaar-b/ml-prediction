@@ -1,5 +1,5 @@
 import { motion, useInView } from 'framer-motion';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   Brain,
   Upload,
@@ -15,6 +15,7 @@ import {
   FileText,
 } from 'lucide-react';
 import './App.css';
+import ImageUpload from './components/ImageUpload';
 
 /* ─────────────────────────────────────────────
    ANIMATION VARIANTS
@@ -715,6 +716,20 @@ function Results() {
    DEMO SECTION
 ───────────────────────────────────────────── */
 function Demo() {
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  const handleImageSelect = (file, previewURL) => {
+    setUploadedImage(file);
+    setImagePreview(previewURL);
+
+    // Here you would connect to your backend API for classification
+    if (file) {
+      console.log('Image uploaded:', file.name, 'Size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+      // Example: sendToBackend(file);
+    }
+  };
+
   return (
     <Section className="demo-section" id="demo">
       <div className="container">
@@ -739,32 +754,8 @@ function Demo() {
           whileInView="visible"
           viewport={{ once: true, margin: '-80px' }}
         >
-          <motion.div
-            className="upload-zone"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-          >
-            <motion.div
-              className="upload-icon-wrap"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <Upload size={44} className="upload-icon" />
-            </motion.div>
-            <h3 className="upload-heading">Drop your retinal image here</h3>
-            <p className="upload-sub">or click to browse from your device</p>
-            <div className="upload-formats">
-              <span>PNG</span><span>JPG</span><span>JPEG</span><span>TIFF</span>
-            </div>
-            <motion.button
-              className="btn btn-primary upload-btn"
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              Select Image
-            </motion.button>
-          </motion.div>
+          {/* Actual ImageUpload Component */}
+          <ImageUpload onImageSelect={handleImageSelect} maxSizeMB={10} compressionThresholdMB={2} />
 
           {/* Info cards below upload */}
           <motion.div
