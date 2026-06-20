@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: dr-detection-api
+    env: python
+    rootDir: hf-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --workers 1
+    plan: free

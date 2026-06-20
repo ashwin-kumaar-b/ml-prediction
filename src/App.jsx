@@ -773,6 +773,7 @@ function Demo() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
   const COMPRESS_THRESHOLD = 2 * 1024 * 1024; // 2MB
@@ -937,6 +938,7 @@ function Demo() {
   const clearSelection = () => {
     setSelectedFile(null);
     setError('');
+    setAnalysisResult(null);
     setPreview((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return '';
@@ -944,7 +946,7 @@ function Demo() {
     clearFileInputs();
   };
 
-  const simulateAnalyze = async () => {
+  const analyzeImage = async () => {
     if (!selectedFile) {
       setError('Please upload an image before starting analysis.');
       return;
@@ -952,11 +954,25 @@ function Demo() {
 
     setLoading(true);
     setError('');
+    setAnalysisResult(null);
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1600));
-    } catch {
-      setError('Network issue during processing. Please try again.');
+      const response = await fetch('https://ashwin568334-notnew.hf.space/predict', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText || response.status}`);
+      }
+
+      const data = await response.json();
+      setAnalysisResult(data);
+    } catch (err) {
+      setError(err.message || 'Network issue during processing. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -1077,7 +1093,7 @@ function Demo() {
               className="btn btn-primary upload-btn upload-btn-analyze"
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
-              onClick={simulateAnalyze}
+              onClick={analyzeImage}
               disabled={loading || !selectedFile}
             >
               {loading ? <Loader2 size={18} className="spin" /> : <Brain size={18} />} Analyze Image
@@ -1089,6 +1105,51 @@ function Demo() {
               <AlertCircle size={18} />
               <span>{error}</span>
             </div>
+          )}
+
+          {analysisResult && (
+            <motion.div 
+              className="analysis-results-card"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="results-header">
+                <Brain size={24} className="results-icon" />
+                <h3>Diagnosis: <span className="highlight-label">{analysisResult.label}</span></h3>
+                <span className="confidence-badge">
+                  {analysisResult.confidence.toFixed(1)}% Confidence
+                </span>
+              </div>
+              
+              <div className="results-content">
+                <div className="report-box">
+                  <div className="report-title">
+                    <FileText size={16} />
+                    <span>Diagnostic Report</span>
+                  </div>
+                  <p className="report-text">{analysisResult.report}</p>
+                </div>
+
+                <div className="scores-box">
+                  <h4>Severity Breakdown</h4>
+                  <div className="scores-list">
+                    {Object.entries(analysisResult.scores).map(([name, score]) => (
+                      <div key={name} className="score-row">
+                        <span className="score-name">{name}</span>
+                        <div className="score-bar-bg">
+                          <div 
+                            className="score-bar-fill" 
+                            style={{ width: `${score * 100}%` }}
+                          />
+                        </div>
+                        <span className="score-percent">{(score * 100).toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
 
           {/* Info cards below upload */}
